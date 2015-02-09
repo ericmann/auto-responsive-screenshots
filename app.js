@@ -14,6 +14,7 @@
  */
 var fs = require( 'fs' ),
     pjson = require( './package.json' ),
+    print = require( 'winston' ).cli(),
     program = require( 'commander' ),
     phantom = require( 'phantomjs' );
 

@@ -13,6 +13,7 @@
  * Module dependencies.
  */
 var fs = require( 'fs' ),
+    lineReader = require( 'line-by-line' ),
     pjson = require( './package.json' ),
     print = require( 'winston' ).cli(),
     program = require( 'commander' ),
@@ -46,6 +47,16 @@ var opts = {
 opts.dateTime = opts.now.getFullYear() + pad( opts.now.getMonth() + 1 ) + pad( opts.now.getDate() ) + '-' + pad( opts.now.getHours() ) + pad( opts.now.getMinutes() ) + pad( opts.now.getSeconds() );
 
 /**
+ * Get the screenshots for a specific URL and store them in the specified directory.
+ *
+ * @param {String} url
+ * @param {String} output_dir
+ */
+function get_screenshots( url, output_dir ) {
+
+}
+
+/**
  * Attempt to generate a URL file for a given basepath.
  *
  * @param {String} baseurl
@@ -74,7 +85,18 @@ function process_file( file, options ) {
 
     print.log( 'info', 'Processing screenshots for all URLS in the \'%s\' file.', file );
 
-    print.log( 'info', 'Screenshots saved to the \'%s\' directory.', options.output );
+    var reader = new lineReader( file );
+
+    reader.on( 'line', function( url ) {
+        print.log( 'info', 'Screenshot for: %s', url );
+
+        get_screenshots( url, options.output );
+    } );
+
+    reader.on( 'end', function() {
+        print.log( 'info', 'Screenshots saved to the \'%s\' directory.', options.output );
+        process.exit( 0 );
+    } );
 }
 
 /**
@@ -148,33 +170,29 @@ function getScreenshots(url) {
     });
   });
 }
- 
-/**
- * Pad dates so they are consistent
- * @param  integer number
- * @return integer padded integer
- */
-function pad(number) {
-  var r = String(number);
-  if ( r.length === 1 ) {
-    r = '0' + r;
-  }
-  return r;
-}
 
 /**
- * Offload the casper wait function so we aren't creating a ton of needless anonymous functions
- * @param  object casper
+ * Pad dates so they are consistent
+ *
+ * @param  {Number} number
+ *
+ * @return {Number} padded integer
  */
-function wait(casper) {
-  casper.wait(5000);
+function pad( number ) {
+    var r = String( number );
+    if ( r.length === 1 ) {
+        r = '0' + r;
+    }
+    return r;
 }
 
 /**
  * Remove slashes and a leading http:// from URls so they are suitable for filenames
- * @param string str
- * @return string escaped string
+ *
+ * @param {String} str
+ *
+ * @return {String} escaped string
  */
-function escapeUrlForDirectory(str) {
-  return str.replace(/^http[s]?:\/\/(?:w{3}.)?/,'').replace( /\//g, '-').replace(/-$/,'');
+function escapeUrlForDirectory( str ) {
+    return str.replace( /^http[s]?:\/\/(?:w{3}.)?/, '' ).replace( /\//g, '-' ).replace( /-$/, '' );
 }

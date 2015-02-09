@@ -14,10 +14,11 @@
  */
 var fs = require( 'fs' ),
     lineReader = require( 'line-by-line' ),
+    NPromise = require( 'promise' ),
     pjson = require( './package.json' ),
     print = require( 'winston' ).cli(),
     program = require( 'commander' ),
-    phantom = require( 'phantomjs' );
+    pageres = require( 'pageres' );
 
 /**
  * Default variables.
@@ -25,24 +26,7 @@ var fs = require( 'fs' ),
 var opts = {
     url: 'https://eamann.com',
     now: new Date(),
-    viewports: [
-        {
-            'name': 'alpha',
-            'viewport': {width: 320, height: 2000}
-        },
-        {
-            'name': 'bravo',
-            'viewport': {width: 768, height: 2000}
-        },
-        {
-            'name': 'charlie',
-            'viewport': {width: 1024, height: 2000}
-        },
-        {
-            'name': 'david',
-            'viewport': {width: 1280, height: 2000}
-        }
-    ]
+    viewports: ['320x2000', '768x2000', '1024x2000', '1280x2000' ]
 };
 opts.dateTime = opts.now.getFullYear() + pad( opts.now.getMonth() + 1 ) + pad( opts.now.getDate() ) + '-' + pad( opts.now.getHours() ) + pad( opts.now.getMinutes() ) + pad( opts.now.getSeconds() );
 
@@ -53,7 +37,19 @@ opts.dateTime = opts.now.getFullYear() + pad( opts.now.getMonth() + 1 ) + pad( o
  * @param {String} output_dir
  */
 function get_screenshots( url, output_dir ) {
+    return new NPromise( function( fulfill, reject ) {
+        var page = new pageres( { delay: 2 } )
+            .src( url, opts.viewports, {crop: true } )
+            .dest( output_dir );
 
+        page.run( function( err ) {
+            if ( err ) {
+                reject( err );
+            }
+
+            fulfill();
+        } );
+    } );
 }
 
 /**
@@ -85,17 +81,22 @@ function process_file( file, options ) {
 
     print.log( 'info', 'Processing screenshots for all URLS in the \'%s\' file.', file );
 
-    var reader = new lineReader( file );
+    var reader = new lineReader( file ),
+        promises = [];
 
     reader.on( 'line', function( url ) {
-        print.log( 'info', 'Screenshot for: %s', url );
+        print.log( 'info', 'Queueing screenshots for: %s', url );
 
-        get_screenshots( url, options.output );
+        promises.push( get_screenshots( url, options.output ) );
     } );
 
     reader.on( 'end', function() {
-        print.log( 'info', 'Screenshots saved to the \'%s\' directory.', options.output );
-        process.exit( 0 );
+        print.log( 'info', 'Finished processing the \'%s\' file.', file );
+
+        NPromise.all( promises ).done( function() {
+            print.log( 'info', 'Screenshots saved to the \'%s\' directory.', options.output );
+            process.exit( 0 );
+        } );
     } );
 }
 
@@ -128,22 +129,6 @@ program.parse( process.argv );
 
 
 
-
-/**
- * Using the PhantomJS filesystem API, load the urls file
- * Iterate through each line and call casper to process.
- */
-/*var urlStream = fs.open( 'urls', 'r');
-
-while( ! urlStream.atEnd() ) {
-  var url = urlStream.readLine();
-  //casper.echo( escapeUrlForDirectory(url)); // debug
-  getScreenshots(url);
-}
-
-urlStream.close();
-
-casper.run();*/
 
 /**
  * Gets a series of screenshots for a given URL

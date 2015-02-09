@@ -52,7 +52,13 @@ opts.dateTime = opts.now.getFullYear() + pad( opts.now.getMonth() + 1 ) + pad( o
  * @param {Object} options
  */
 function scanurl( baseurl, options ) {
+    if ( undefined === options.output ) {
+        options.output = 'urls';
+    }
 
+    print.log( 'info', 'Scanning for page URLs on \'%s\'.', baseurl );
+
+    print.log( 'info', 'Scan complete. URLs logged to file: \'%s\'.', options.output );
 }
 
 /**
@@ -62,7 +68,13 @@ function scanurl( baseurl, options ) {
  * @param {Object} options
  */
 function process_file( file, options ) {
+    if ( undefined === options.output ) {
+        options.output = 'screenshots';
+    }
 
+    print.log( 'info', 'Processing screenshots for all URLS in the \'%s\' file.', file );
+
+    print.log( 'info', 'Screenshots saved to the \'%s\' directory.', options.output );
 }
 
 /**
@@ -70,46 +82,29 @@ function process_file( file, options ) {
  */
 program.version( pjson.version );
 
+/**
+ * The scan command to build a `urls` file.
+ */
 program
     .command( 'scan <baseurl>' )
     .option( '-o, --output [file]', 'Define an output file other than \'urls\'' )
     .action( scanurl );
 
+/**
+ * The process command to parse the `urls` file.
+ */
 program
     .command( 'process <file>' )
     .option( '-o, --output [directory]', 'Define an output directory other than \'screenshots\'' )
     .action( process_file );
 
+/**
+ * Run the application and parse command line arguments.
+ */
 program.parse( process.argv );
 
 
 
-
-// Set up variables
-var screenshotUrl = 'http://google.com/',
-    screenshotNow = new Date(),
-    screenshotDateTime = screenshotNow.getFullYear() + pad(screenshotNow.getMonth() + 1) + pad(screenshotNow.getDate()) + '-' + pad(screenshotNow.getHours()) + pad(screenshotNow.getMinutes()) + pad(screenshotNow.getSeconds()),
-     viewports = [
-      {
-        'name': 'alpha',
-        'viewport': {width: 320, height: 2000}
-      },
-      {
-        'name': 'bravo',
-        'viewport': {width: 768, height: 2000}
-      },
-      {
-        'name': 'charlie',
-        'viewport': {width: 1024, height: 2000}
-      },
-      {
-        'name': 'david',
-        'viewport': {width: 1280, height: 2000}
-      }
-    ];
-
-// Load the casper environment with a dummy URL
-//casper.start( 'about:config' );
 
 
 /**

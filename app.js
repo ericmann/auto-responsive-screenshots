@@ -125,10 +125,10 @@ program.version( pjson.version );
 /**
  * The scan command to build a `urls` file.
  */
-program
+/*program
     .command( 'scan <baseurl>' )
     .option( '-o, --output [file]', 'Define an output file other than \'urls\'' )
-    .action( scanurl );
+    .action( scanurl );*/
 
 /**
  * The process command to parse the `urls` file.

@@ -24,11 +24,23 @@ var fs = require( 'fs' ),
  * Default variables.
  */
 var opts = {
-    url: 'https://eamann.com',
-    now: new Date(),
     viewports: ['320x2000', '768x2000', '1024x2000', '1280x2000' ]
 };
-opts.dateTime = opts.now.getFullYear() + pad( opts.now.getMonth() + 1 ) + pad( opts.now.getDate() ) + '-' + pad( opts.now.getHours() ) + pad( opts.now.getMinutes() ) + pad( opts.now.getSeconds() );
+
+/**
+ * Pad dates so they are consistent
+ *
+ * @param  {Number} number
+ *
+ * @return {Number} padded integer
+ */
+function pad( number ) {
+    var r = String( number );
+    if ( r.length === 1 ) {
+        r = '0' + r;
+    }
+    return r;
+}
 
 /**
  * Get the screenshots for a specific URL and store them in the specified directory.
@@ -79,7 +91,7 @@ function process_file( file, options ) {
         options.output = 'screenshots';
     }
 
-    print.log( 'info', 'Processing screenshots for all URLS in the \'%s\' file.', file );
+    print.log( 'info', 'Processing screenshots for all URLS in file: \'%s\'.', file );
 
     var reader = new lineReader( file ),
         promises = [];
@@ -91,7 +103,7 @@ function process_file( file, options ) {
     } );
 
     reader.on( 'end', function() {
-        print.log( 'info', 'Finished processing the \'%s\' file.', file );
+        print.log( 'info', 'Finished processing file: \'%s\'.', file );
 
         NPromise.all( promises ).done( function() {
             print.log( 'info', 'Screenshots saved to the \'%s\' directory.', options.output );
@@ -125,59 +137,3 @@ program
  * Run the application and parse command line arguments.
  */
 program.parse( process.argv );
-
-
-
-
-
-/**
- * Gets a series of screenshots for a given URL
- * 
- * @param  string url a URL
- */
-function getScreenshots(url) {
-
-  casper.each(viewports, function(casper, viewport) {
-    this.then(function() {
-      this.viewport(viewport.viewport.width, viewport.viewport.height);
-    });
-    this.thenOpen(url, wait( this ));
-    this.then(function(){
-      var screenshotPath = 'screenshots/' + screenshotDateTime + '/' + escapeUrlForDirectory(url) + '-' + viewport.viewport.width + 'x' + viewport.viewport.height + '.png';
-      this.echo('Screenshot for ' + url + ' (' + viewport.viewport.width + 'x' + viewport.viewport.height + ')', 'info');
-      // this.capture(screenshotPath, {
-      //     top: 0,
-      //     left: 0,
-      //     width: viewport.viewport.width,
-      //     height: viewport.viewport.height
-      // });
-      this.captureSelector(screenshotPath, 'html');
-    });
-  });
-}
-
-/**
- * Pad dates so they are consistent
- *
- * @param  {Number} number
- *
- * @return {Number} padded integer
- */
-function pad( number ) {
-    var r = String( number );
-    if ( r.length === 1 ) {
-        r = '0' + r;
-    }
-    return r;
-}
-
-/**
- * Remove slashes and a leading http:// from URls so they are suitable for filenames
- *
- * @param {String} str
- *
- * @return {String} escaped string
- */
-function escapeUrlForDirectory( str ) {
-    return str.replace( /^http[s]?:\/\/(?:w{3}.)?/, '' ).replace( /\//g, '-' ).replace( /-$/, '' );
-}

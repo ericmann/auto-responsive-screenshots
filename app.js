@@ -8,9 +8,80 @@
 * Usage:
 * $ casperjs screenshots.js
 */
- 
-var casper = require("casper").create();
-var fs = require('fs'); /* phantonJS module: https://github.com/ariya/phantomjs/wiki/API-Reference-FileSystem */
+
+/**
+ * Module dependencies.
+ */
+var fs = require( 'fs' ),
+    pjson = require( './package.json' ),
+    program = require( 'commander' ),
+    phantom = require( 'phantomjs' );
+
+/**
+ * Default variables.
+ */
+var opts = {
+    url: 'https://eamann.com',
+    now: new Date(),
+    viewports: [
+        {
+            'name': 'alpha',
+            'viewport': {width: 320, height: 2000}
+        },
+        {
+            'name': 'bravo',
+            'viewport': {width: 768, height: 2000}
+        },
+        {
+            'name': 'charlie',
+            'viewport': {width: 1024, height: 2000}
+        },
+        {
+            'name': 'david',
+            'viewport': {width: 1280, height: 2000}
+        }
+    ]
+};
+opts.dateTime = opts.now.getFullYear() + pad( opts.now.getMonth() + 1 ) + pad( opts.now.getDate() ) + '-' + pad( opts.now.getHours() ) + pad( opts.now.getMinutes() ) + pad( opts.now.getSeconds() );
+
+/**
+ * Attempt to generate a URL file for a given basepath.
+ *
+ * @param {String} baseurl
+ * @param {Object} options
+ */
+function scanurl( baseurl, options ) {
+
+}
+
+/**
+ * Process a urls file to create screenshots.
+ *
+ * @param {String} file
+ * @param {Object} options
+ */
+function process_file( file, options ) {
+
+}
+
+/**
+ * The core application
+ */
+program.version( pjson.version );
+
+program
+    .command( 'scan <baseurl>' )
+    .option( '-o, --output [file]', 'Define an output file other than \'urls\'' )
+    .action( scanurl );
+
+program
+    .command( 'process <file>' )
+    .option( '-o, --output [directory]', 'Define an output directory other than \'screenshots\'' )
+    .action( process_file );
+
+program.parse( process.argv );
+
+
 
 
 // Set up variables
@@ -37,14 +108,14 @@ var screenshotUrl = 'http://google.com/',
     ];
 
 // Load the casper environment with a dummy URL
-casper.start( 'about:config' );
+//casper.start( 'about:config' );
 
 
 /**
  * Using the PhantomJS filesystem API, load the urls file
  * Iterate through each line and call casper to process.
  */
-var urlStream = fs.open( 'urls', 'r');
+/*var urlStream = fs.open( 'urls', 'r');
 
 while( ! urlStream.atEnd() ) {
   var url = urlStream.readLine();
@@ -54,7 +125,7 @@ while( ! urlStream.atEnd() ) {
 
 urlStream.close();
 
-casper.run();
+casper.run();*/
 
 /**
  * Gets a series of screenshots for a given URL

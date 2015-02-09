@@ -18,5 +18,11 @@ These can be tweaked from within app.js, but by default:
 ## Requires
 This script requires casperJS and, by extension, PhantomJS.
 
+## Installation
+First, install the tools upon which this app depends:
+- `npm install -g casperjs`
+
+Then, clone the git repository to your local machine and run the app from there.
+
 ## Running
 `casperjs app.js`

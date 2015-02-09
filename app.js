@@ -17,6 +17,7 @@ var fs = require( 'fs' ),
     NPromise = require( 'promise' ),
     pjson = require( './package.json' ),
     print = require( 'winston' ).cli(),
+    spinner = require( 'cli-spinner' ).Spinner,
     program = require( 'commander' ),
     pageres = require( 'pageres' );
 
@@ -103,9 +104,13 @@ function process_file( file, options ) {
     } );
 
     reader.on( 'end', function() {
-        print.log( 'info', 'Finished processing file: \'%s\'.', file );
+        print.log( 'info', 'Finished queing from file: \'%s\'.', file );
+        var spin = new spinner( 'Processing queue ... %s' );
+        spin.setSpinnerString( '|/-\\' );
+        spin.start();
 
         NPromise.all( promises ).done( function() {
+            spin.stop( true );
             print.log( 'info', 'Screenshots saved to the \'%s\' directory.', options.output );
             process.exit( 0 );
         } );

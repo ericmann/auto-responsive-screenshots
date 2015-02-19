@@ -1,8 +1,8 @@
 # Auto Responsive Screenshots
 
-Uses CasperJS to generate screenshots at a series of common browser sizes for a set of URLs.
+Uses PhantomJS to generate screenshots at a series of common browser sizes for a set of URLs.
 
-Easily used to generate archives. Like, for posterity. To see what something looked like back in the day.
+Easily used to generate archives. Like, for posterity. To see what something looked like back in the day. Also useful for capturing various pages of a site for QA review.
 
 Captures full-length images (specifically, the HTML selector)
 
@@ -16,7 +16,7 @@ These can be tweaked from within app.js, but by default:
 * 320px
 
 ## Requires
-This script requires casperJS and, by extension, PhantomJS.
+This script requires PhantomJS.
 
 ## Running
 `node app.js scan <baseurl>`

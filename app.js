@@ -25,7 +25,8 @@ var fs = require( 'fs' ),
  * Default variables.
  */
 var opts = {
-    viewports: ['320x2000', '768x2000', '1024x2000', '1280x2000' ]
+	viewports: ['320x2000', '768x2000', '1024x2000', '1280x2000' ],
+	batch_size: 5
 };
 
 /**
@@ -82,6 +83,35 @@ function scanurl( baseurl, options ) {
 }
 
 /**
+ * Process a batch of URLs.
+ *
+ * @param {Array}  urls
+ * @param {String} output
+ *
+ * @returns {NPromise}
+ */
+function process_batch( urls, output ) {
+	return new NPromise( function( fulfill, reject ) {
+		var promises = [];
+
+		for( var i = 0; i < urls.length; i ++ ) {
+			var url = urls[ i ];
+			promises.push( get_screenshots( url, output ) );
+		}
+
+		var spin = new spinner( 'Processing batch ... %s' );
+		spin.setSpinnerString( '|/-\\' );
+		spin.start();
+
+		NPromise.all( promises ).done( function() {
+			spin.stop( true );
+
+			fulfill();
+		} );
+	} );
+}
+
+/**
  * Process a urls file to create screenshots.
  *
  * @param {String} file
@@ -95,35 +125,50 @@ function process_file( file, options ) {
     print.log( 'info', 'Processing screenshots for all URLS in file: \'%s\'.', file );
 
     var reader = new lineReader( file ),
-        promises = [];
+	    urls = [];
 
 	var readPromise = new NPromise( function ( fulfill, reject ) {
 		reader.on( 'line', function ( url ) {
 			print.log( 'info', 'Queueing screenshots for: %s', url );
 
-			promises.push( get_screenshots( url, options.output ) );
+			urls.push( url );
 		} );
 
 		reader.on( 'end', function () {
-			print.log( 'info', 'Finished queing from file: \'%s\'.', file );
-			var spin = new spinner( 'Processing queue ... %s' );
-			spin.setSpinnerString( '|/-\\' );
-			spin.start();
+			print.log( 'info', 'Finished queueing from file: \'%s\'.', file );
 
-			fulfill( spin );
+			var batch_no = 1;
+
+			function next_batch() {
+				print.log( 'info', 'Processing batch #%d of %d paths.', batch_no, opts.batch_size );
+
+				return new NPromise( function( innerfulfill, reject ) {
+					if ( urls.length <= 0 ) {
+						fulfill();
+					}
+
+					var batch = urls.splice( 0, opts.batch_size );
+
+					process_batch( batch, options.output ).done( function() {
+						if ( urls.length <= 0 ) {
+							innerfulfill();
+						} else {
+							batch_no++;
+							next_batch();
+						}
+					} );
+				} );
+			}
+
+			next_batch().done( fulfill );
 		} );
 
 	} );
 
-	readPromise.done(
-		function( spin ) {
-			NPromise.all( promises ).done( function () {
-				spin.stop( true );
-				print.log( 'info', 'Screenshots saved to the \'%s\' directory.', options.output );
-				process.exit( 0 );
-			} );
-		}
-	);
+	readPromise.done( function() {
+		print.log( 'info', 'Screenshots saved to the \'%s\' directory.', options.output );
+		process.exit( 0 );
+	} );
 
 
 

@@ -97,24 +97,36 @@ function process_file( file, options ) {
     var reader = new lineReader( file ),
         promises = [];
 
-    reader.on( 'line', function( url ) {
-        print.log( 'info', 'Queueing screenshots for: %s', url );
+	var readPromise = new NPromise( function ( fulfill, reject ) {
+		reader.on( 'line', function ( url ) {
+			print.log( 'info', 'Queueing screenshots for: %s', url );
 
-        promises.push( get_screenshots( url, options.output ) );
-    } );
+			promises.push( get_screenshots( url, options.output ) );
+		} );
 
-    reader.on( 'end', function() {
-        print.log( 'info', 'Finished queing from file: \'%s\'.', file );
-        var spin = new spinner( 'Processing queue ... %s' );
-        spin.setSpinnerString( '|/-\\' );
-        spin.start();
+		reader.on( 'end', function () {
+			print.log( 'info', 'Finished queing from file: \'%s\'.', file );
+			var spin = new spinner( 'Processing queue ... %s' );
+			spin.setSpinnerString( '|/-\\' );
+			spin.start();
 
-        NPromise.all( promises ).done( function() {
-            spin.stop( true );
-            print.log( 'info', 'Screenshots saved to the \'%s\' directory.', options.output );
-            process.exit( 0 );
-        } );
-    } );
+			fulfill( spin );
+		} );
+
+	} );
+
+	readPromise.done(
+		function( spin ) {
+			NPromise.all( promises ).done( function () {
+				spin.stop( true );
+				print.log( 'info', 'Screenshots saved to the \'%s\' directory.', options.output );
+				process.exit( 0 );
+			} );
+		}
+	);
+
+
+
 }
 
 /**
